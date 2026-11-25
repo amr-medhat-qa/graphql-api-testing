@@ -13,7 +13,7 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   workers: 1, // a shared public API sheds bursts of parallel requests: keep the load polite
-  timeout: 30_000,
+  timeout: 60_000, // room for the retry backoff on a rate-limited public API
   reporter: isCI
     ? [['github'], ['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'playwright-report/junit.xml' }]]
     : [['list'], ['html', { open: 'never' }]],
