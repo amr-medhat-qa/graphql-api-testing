@@ -79,8 +79,10 @@ Settings can be changed with environment variables, for example `MAX_RESPONSE_MS
 ### Why one worker and a retry in the client
 
 The API is a **free public service** behind a rate-limiting gateway. Sending many requests at once makes it reset connections or answer
-with an HTML error page. That was seen while building the suite (23 of 48 tests failed with 4 parallel workers). So the tests run with **one worker**,
-and the client retries **only infrastructure hiccups** (connection reset, `429`, `5xx`, HTML instead of JSON) up to 4 times.
+with an HTML error page. That was seen while building the suite (23 of 48 tests failed with 4 parallel workers), and again on the shared GitHub runner
+(one test got `429 Too Many Requests`). So the tests run with **one worker**, requests are spaced 250 ms apart,
+and the client retries **only infrastructure hiccups** (connection reset, `429`, `5xx`, HTML instead of JSON) up to 6 times,
+waiting as long as the server asks (`Retry-After`) or with a growing delay.
 A real GraphQL answer, including a `400` with an error, is never retried or hidden.
 
 ## CI

@@ -14,8 +14,26 @@ export interface GraphQLResult<T = unknown> {
   durationMs: number;
 }
 
-const MAX_ATTEMPTS = 4;
+const MAX_ATTEMPTS = 6;
+/** Minimum gap between two requests, so a long run stays under the public API's rate limit. */
+const MIN_GAP_MS = 250;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+let nextSlot = 0;
+/** Spaces requests out (the tests run in one process, so a module-level clock is enough). */
+async function pace(): Promise<void> {
+  const now = Date.now();
+  const wait = Math.max(0, nextSlot - now);
+  nextSlot = Math.max(now, nextSlot) + MIN_GAP_MS;
+  if (wait > 0) await sleep(wait);
+}
+
+/** How long to wait before retrying: the server's `Retry-After` when it sends one, else growing backoff. */
+function backoffMs(attempt: number, response?: APIResponse): number {
+  const retryAfter = Number(response?.headers()['retry-after']);
+  if (Number.isFinite(retryAfter) && retryAfter > 0) return Math.min(retryAfter * 1000, 10_000);
+  return Math.min(1000 * 2 ** (attempt - 1), 8000);
+}
 
 /**
  * A free public API sheds load by resetting connections or answering with an HTML error page.
@@ -52,6 +70,7 @@ export class GraphQLClient {
 
   private async execute<T>(call: () => Promise<APIResponse>): Promise<GraphQLResult<T>> {
     for (let attempt = 1; ; attempt++) {
+      await pace();
       const started = Date.now();
       let response: APIResponse | undefined;
       try {
@@ -69,7 +88,7 @@ export class GraphQLClient {
         }
         return { status: response.status(), body, rawBody, durationMs: Date.now() - started };
       }
-      await sleep(400 * attempt);
+      await sleep(backoffMs(attempt, response));
     }
   }
 }
