@@ -1,0 +1,38 @@
+{
+  "name": "graphql-api-testing",
+  "version": "1.0.0",
+  "description": "GraphQL API test automation with Playwright, TypeScript and Zod schema validation",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run format:check"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "graphql",
+    "api-testing",
+    "zod",
+    "qa"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-playwright": "^2.12.2",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.73.0",
+    "zod": "^4.6.7"
+  }
+}
